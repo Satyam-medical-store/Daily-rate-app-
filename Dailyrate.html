@@ -1,0 +1,316 @@
+Aapki dukaan ke liye maine ek complete ready-to-use Web App ka code taiyar kar
+diya hai. Ise aap apne Mobile ya Computer ke browser (Chrome vagera) me direct
+chala sakte hain, aur isme internet ki bhi jarurat nahi padegi (data aapke
+phone/PC me hamesha save rahega).
+
+Is app me aapki saari requirements shamil hain:
+
+1.  Daily Product Entry (Product ka naam, quantity, rate).
+2.  Category & Sub-Category:
+      - Medicine (Tablets, Syrups, Injections, Ointment, etc.)
+      - Cosmetic (Skincare, Haircare, Makeup, Perfume, etc.)
+      - Surgical (Gloves/Mask, Bandage/Cotton, Syringes, etc.)
+      - General Item (Toiletries, Stationery, Snacks, etc.)
+3.  Daily Rate Edit Option: Jab chahein purana rate badal sakte hain.
+4.  Date Modify Option: Entry karte waqt ya baad me date badalne ki suvidha.
+5.  Search & Excel/CSV Export: Product search karne aur sara data Excel me
+    download karne ka option.
+
+Step 1: Is code ko chalane ka aasan tarika:
+
+1.  Apne phone ya computer me Notepad (ya koi bhi Text Editor) kholein.
+2.  Niche diye gaye code ko Copy karke Notepad me Paste kar dein.
+3.  File ko save karte waqt uska naam dukaan.html rakhein (.html lagana jaruri
+    hai).
+4.  Ab us file par click karein—ye aapke mobile/computer ke Chrome browser me
+    ekdum app ki tarah khul jayegi.
+
+App ka Complete Code:
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dukaan Daily Stock & Rate Manager</title>
+  <!-- Tailwind CSS for clean design -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans p-3 md:p-6">
+
+  <div class="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-4 md:p-6">
+    <!-- Header -->
+    <div class="border-b pb-4 mb-4 flex justify-between items-center flex-wrap gap-2">
+      <div>
+        <h1 class="text-2xl font-bold text-blue-700">🏪 Dukaan Stock & Rate Manager</h1>
+        <p class="text-xs text-gray-500">Medicine, Cosmetic, Surgical & General Daily Entry</p>
+      </div>
+      <button onclick="exportToCSV()" class="bg-green-600 text-white text-sm px-3 py-2 rounded-lg hover:bg-green-700">
+        📥 Export to Excel (CSV)
+      </button>
+    </div>
+
+    <!-- Form Section -->
+    <form id="productForm" class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200" onsubmit="saveProduct(event)">
+      <h2 id="formTitle" class="text-md font-semibold text-blue-900 mb-3">➕ Naya Product Add Karein</h2>
+      <input type="hidden" id="editIndex" value="-1">
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- Date Modify Option -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Date (Tarikh):</label>
+          <input type="date" id="entryDate" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+        </div>
+
+        <!-- Category -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Category:</label>
+          <select id="category" onchange="updateSubCategories()" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+            <option value="">-- Select Category --</option>
+            <option value="Medicine">Medicine (Dawa)</option>
+            <option value="Cosmetic">Cosmetic</option>
+            <option value="Surgical">Surgical Item</option>
+            <option value="General Item">General Item</option>
+          </select>
+        </div>
+
+        <!-- Sub-Category -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Sub-Category:</label>
+          <select id="subCategory" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+            <option value="">-- Pehle Category Chunein --</option>
+          </select>
+        </div>
+
+        <!-- Product Name -->
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-gray-700 mb-1">Product Name (Item ka naam):</label>
+          <input type="text" id="productName" placeholder="e.g. Paracetamol 500mg / Nivea Cream" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+        </div>
+
+        <!-- Quantity -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Quantity (Matra):</label>
+          <input type="number" id="quantity" placeholder="e.g. 10" min="1" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+        </div>
+
+        <!-- Daily Rate (Purchase / Selling) -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Purchase Rate (Kharid Rate ₹):</label>
+          <input type="number" step="0.01" id="purchaseRate" placeholder="₹ 0.00" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">Selling Rate (Bikri Rate ₹):</label>
+          <input type="number" step="0.01" id="sellingRate" placeholder="₹ 0.00" required class="w-full border rounded-md p-2 text-sm bg-white focus:ring-2 focus:ring-blue-400 outline-none">
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-end gap-2">
+          <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 text-sm">Save Karein</button>
+          <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-400 text-white font-medium py-2 px-3 rounded-md hover:bg-gray-500 text-sm">Cancel</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Search & Filter Section -->
+    <div class="flex flex-col md:flex-row gap-2 justify-between mb-4">
+      <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="🔍 Product ya Category search karein..." class="border rounded-md p-2 text-sm w-full md:w-1/2">
+      <select id="filterCategory" onchange="renderTable()" class="border rounded-md p-2 text-sm bg-white">
+        <option value="">Sabhi Categories Dekhein</option>
+        <option value="Medicine">Medicine</option>
+        <option value="Cosmetic">Cosmetic</option>
+        <option value="Surgical">Surgical</option>
+        <option value="General Item">General Item</option>
+      </select>
+    </div>
+
+    <!-- Product List Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse border border-gray-200 text-xs md:text-sm text-left">
+        <thead class="bg-gray-100 text-gray-700 uppercase font-semibold">
+          <tr>
+            <th class="border p-2">Date</th>
+            <th class="border p-2">Category</th>
+            <th class="border p-2">Sub-Cat</th>
+            <th class="border p-2">Product Name</th>
+            <th class="border p-2">Qty</th>
+            <th class="border p-2">Kharid Rate</th>
+            <th class="border p-2">Bikri Rate</th>
+            <th class="border p-2 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody">
+          <!-- Products will appear here dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Sub-Categories data
+    const subCategoriesData = {
+      "Medicine": ["Tablets / Capsules", "Syrups", "Injections", "Ointments / Creams", "Eye/Ear Drops", "Other Medicine"],
+      "Cosmetic": ["Skincare / Lotion", "Haircare / Shampoo", "Soaps / Bodywash", "Face Wash / Cream", "Perfumes / Deodorants", "Makeup"],
+      "Surgical": ["Cotton & Bandages", "Gloves & Masks", "Syringes & Needles", "Cannula / IV Sets", "Thermometer / BP Monitor", "Other Surgical"],
+      "General Item": ["Snacks / Drinks", "Toiletries", "Stationery", "Household / Cleaning", "Other General"]
+    };
+
+    // Load items from browser storage
+    let products = JSON.parse(localStorage.getItem('dukan_stock_db')) || [];
+
+    // Set today's date by default
+    document.getElementById('entryDate').valueAsDate = new Date();
+
+    function updateSubCategories(selectedSub = "") {
+      const cat = document.getElementById('category').value;
+      const subCatDropdown = document.getElementById('subCategory');
+      subCatDropdown.innerHTML = '<option value="">-- Sub-Category Chunein --</option>';
+
+      if (cat && subCategoriesData[cat]) {
+        subCategoriesData[cat].forEach(sub => {
+          const opt = document.createElement('option');
+          opt.value = sub;
+          opt.textContent = sub;
+          if (sub === selectedSub) opt.selected = true;
+          subCatDropdown.appendChild(opt);
+        });
+      }
+    }
+
+    function saveProduct(event) {
+      event.preventDefault();
+      const editIndex = parseInt(document.getElementById('editIndex').value);
+
+      const product = {
+        date: document.getElementById('entryDate').value,
+        category: document.getElementById('category').value,
+        subCategory: document.getElementById('subCategory').value,
+        name: document.getElementById('productName').value,
+        quantity: document.getElementById('quantity').value,
+        purchaseRate: parseFloat(document.getElementById('purchaseRate').value).toFixed(2),
+        sellingRate: parseFloat(document.getElementById('sellingRate').value).toFixed(2)
+      };
+
+      if (editIndex === -1) {
+        products.unshift(product); // Add new item at top
+      } else {
+        products[editIndex] = product; // Update existing item
+      }
+
+      localStorage.setItem('dukan_stock_db', JSON.stringify(products));
+      resetForm();
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('productTableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filterCat = document.getElementById('filterCategory').value;
+
+      tbody.innerHTML = '';
+
+      const filtered = products.filter((item) => {
+        const matchSearch = item.name.toLowerCase().includes(search) || item.subCategory.toLowerCase().includes(search);
+        const matchCat = filterCat === "" || item.category === filterCat;
+        return matchSearch && matchCat;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-gray-500">Koi item nahi mila. Naya item add karein!</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((item, index) => {
+        const originalIndex = products.indexOf(item);
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50 border-b">
+            <td class="p-2 border whitespace-nowrap">${item.date}</td>
+            <td class="p-2 border"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">${item.category}</span></td>
+            <td class="p-2 border text-gray-600">${item.subCategory}</td>
+            <td class="p-2 border font-medium">${item.name}</td>
+            <td class="p-2 border">${item.quantity}</td>
+            <td class="p-2 border text-orange-600">₹${item.purchaseRate}</td>
+            <td class="p-2 border font-semibold text-green-700">₹${item.sellingRate}</td>
+            <td class="p-2 border text-center whitespace-nowrap">
+              <button onclick="editProduct(${originalIndex})" class="bg-amber-500 text-white px-2 py-1 rounded text-xs hover:bg-amber-600 mr-1">✏️ Edit Rate/Date</button>
+              <button onclick="deleteProduct(${originalIndex})" class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600">🗑️ Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function editProduct(index) {
+      const p = products[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('entryDate').value = p.date;
+      document.getElementById('category').value = p.category;
+      updateSubCategories(p.subCategory);
+      document.getElementById('productName').value = p.name;
+      document.getElementById('quantity').value = p.quantity;
+      document.getElementById('purchaseRate').value = p.purchaseRate;
+      document.getElementById('sellingRate').value = p.sellingRate;
+
+      document.getElementById('formTitle').innerText = "✏️ Rate / Date / Item Edit Karein";
+      document.getElementById('submitBtn').innerText = "Update Karein";
+      document.getElementById('submitBtn').className = "w-full bg-amber-600 text-white font-medium py-2 rounded-md hover:bg-amber-700 text-sm";
+      document.getElementById('cancelBtn').classList.remove('hidden');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('productForm').reset();
+      document.getElementById('editIndex').value = -1;
+      document.getElementById('entryDate').valueAsDate = new Date();
+      document.getElementById('subCategory').innerHTML = '<option value="">-- Pehle Category Chunein --</option>';
+      document.getElementById('formTitle').innerText = "➕ Naya Product Add Karein";
+      document.getElementById('submitBtn').innerText = "Save Karein";
+      document.getElementById('submitBtn').className = "w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 text-sm";
+      document.getElementById('cancelBtn').classList.add('hidden');
+    }
+
+    function deleteProduct(index) {
+      if (confirm("Kya aap sach me is item ko delete karna chahte hain?")) {
+        products.splice(index, 1);
+        localStorage.setItem('dukan_stock_db', JSON.stringify(products));
+        renderTable();
+      }
+    }
+
+    function exportToCSV() {
+      if (products.length === 0) {
+        alert("Pehle kuch products add karein!");
+        return;
+      }
+      let csvContent = "data:text/csv;charset=utf-8,Date,Category,Sub-Category,Product Name,Quantity,Purchase Rate,Selling Rate\n";
+      products.forEach(e => {
+        csvContent += `"${e.date}","${e.category}","${e.subCategory}","${e.name}",${e.quantity},${e.purchaseRate},${e.sellingRate}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Dukaan_Stock_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Initial load
+    renderTable();
+  </script>
+</body>
+</html>
+
+Alternative: Agar aapko Play Store wali Readymade Mobile App chahiye:
+
+Agar aap code nahi chalana chahte aur direct Google Play Store se ready-made
+apps use karna chahte hain jisme barcode scanning aur GST bill bhi nikal sake,
+toh ye 3 best hain:
+
+1.  Vyapar App / MyBillBook: Isme custom item category (Medicine, Cosmetic,
+    etc.) aur daily purchase rate edit karne ka option hota hai.
+2.  Marg ERP (MargPay): Medicine aur Surgical dukano ke liye sabse best software
+    hai, isme batch number, expiry date aur daily rate change ka built-in system
+    hota hai.
