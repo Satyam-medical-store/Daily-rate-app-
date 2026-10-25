@@ -1,1 +1,193 @@
 # Daily-rate-app-
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>डेली रेट ट्रैकर (Daily Rate Tracker)</title>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #1f2937;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 12px; max-width: 650px; margin: auto; }
+    
+    header { text-align: center; margin-bottom: 16px; padding: 12px; background: var(--card); border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    header h1 { font-size: 1.35rem; color: #111827; }
+    header p { font-size: 0.85rem; color: #6b7280; margin-top: 4px; }
+    .card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); margin-bottom: 14px; }
+    
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #4b5563; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: var(--primary); }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn:hover { background: var(--primary-dark); }
+    
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .filter-bar select, .filter-bar input { font-size: 0.9rem; padding: 8px; }
+    .product-list { display: flex; flex-direction: column; gap: 10px; }
+    .item-card { background: white; padding: 14px; border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    
+    .item-info h3 { font-size: 1.05rem; margin-bottom: 3px; }
+    .badge { display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 12px; background: #e5e7eb; color: #374151; font-weight: 600; margin-bottom: 4px; }
+    .badge.मेडिसिन { background: #dbeafe; color: #1e40af; }
+    .badge.कॉस्मेटिक { background: #fce7f3; color: #9d174d; }
+    .badge.सर्जिकल { background: #dcfce7; color: #166534; }
+    
+    .price-tag { font-size: 1.25rem; font-weight: bold; color: #047857; text-align: right; }
+    .date-tag { font-size: 0.75rem; color: #6b7280; text-align: right; margin-top: 2px; }
+    .actions { display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end; }
+    .btn-small { border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+    .btn-edit { background: #f59e0b; color: white; }
+    .btn-delete { background: #ef4444; color: white; }
+    
+    .empty-state { text-align: center; padding: 30px; color: #9ca3af; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📋 प्रोडक्ट रेट डायरी</h1>
+    <p>रोज़ाना के रेट नोट करें और ट्रैक करें</p>
+  </header>
+  <!-- नया प्रोडक्ट / रेट जोड़ने का फॉर्म -->
+  <div class="card">
+    <div class="form-group">
+      <label>प्रोडक्ट का नाम</label>
+      <input type="text" id="pName" placeholder="उदा. Paracetamol 650 या Nivea Cream">
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>कैटेगरी (Category)</label>
+        <select id="pCat">
+          <option value="मेडिसिन">मेडिसिन (Medicine)</option>
+          <option value="कॉस्मेटिक">कॉस्मेटिक (Cosmetic)</option>
+          <option value="सर्जिकल">सर्जिकल (Surgical)</option>
+          <option value="अन्य">अन्य (Other)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>आज का रेट (₹)</label>
+        <input type="number" id="pRate" placeholder="0.00" step="any">
+      </div>
+    </div>
+    <button class="btn" onclick="saveProduct()">रेट सेव करें</button>
+  </div>
+  <!-- फ़िल्टर और सर्च -->
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="🔍 नाम से खोजें..." oninput="renderList()">
+    <select id="filterCat" onchange="renderList()">
+      <option value="all">सभी कैटेगरी</option>
+      <option value="मेडिसिन">मेडिसिन</option>
+      <option value="कॉस्मेटिक">कॉस्मेटिक</option>
+      <option value="सर्जिकल">सर्जिकल</option>
+      <option value="अन्य">अन्य</option>
+    </select>
+  </div>
+  <!-- प्रोडक्ट्स की लिस्ट -->
+  <div class="product-list" id="productList"></div>
+  <script>
+    // लोकल स्टोरेज से डेटा लोड करें
+    let products = JSON.parse(localStorage.getItem('myProductsRates')) || [];
+    function saveProduct() {
+      const name = document.getElementById('pName').value.trim();
+      const cat = document.getElementById('pCat').value;
+      const rate = document.getElementById('pRate').value.trim();
+      
+      if (!name || !rate) {
+        alert("कृपया प्रोडक्ट का नाम और रेट दोनों भरें!");
+        return;
+      }
+      const today = new Date().toLocaleDateString('hi-IN', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+      // चेक करें कि क्या प्रोडक्ट पहले से मौजूद है
+      const existingIndex = products.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+      if (existingIndex > -1) {
+        // अगर पहले से है, तो रेट और तारीख अपडेट कर दो
+        products[existingIndex].rate = rate;
+        products[existingIndex].category = cat;
+        products[existingIndex].date = today;
+      } else {
+        // नया प्रोडक्ट जोड़ें
+        products.unshift({
+          id: Date.now(),
+          name: name,
+          category: cat,
+          rate: rate,
+          date: today
+        });
+      }
+      localStorage.setItem('myProductsRates', JSON.stringify(products));
+      document.getElementById('pName').value = '';
+      document.getElementById('pRate').value = '';
+      renderList();
+    }
+    // रेट तुरंत बदलने (Edit) का फंक्शन
+    function updateRate(id) {
+      const item = products.find(p => p.id === id);
+      if (!item) return;
+      const newRate = prompt(`"${item.name}" का नया रेट दर्ज करें:`, item.rate);
+      if (newRate !== null && newRate.trim() !== "") {
+        item.rate = newRate.trim();
+        item.date = new Date().toLocaleDateString('hi-IN', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        }) + " (बदला हुआ)";
+        localStorage.setItem('myProductsRates', JSON.stringify(products));
+        renderList();
+      }
+    }
+    // प्रोडक्ट डिलीट करना
+    function deleteProduct(id) {
+      if (confirm("क्या आप वाकई इसे हटाना चाहते हैं?")) {
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('myProductsRates', JSON.stringify(products));
+        renderList();
+      }
+    }
+    // लिस्ट रेंडर (दिखाने) का फंक्शन
+    function renderList() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filter = document.getElementById('filterCat').value;
+      const listContainer = document.getElementById('productList');
+      listContainer.innerHTML = '';
+      const filtered = products.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(search);
+        const matchesCat = (filter === 'all') || (item.category === filter);
+        return matchesSearch && matchesCat;
+      });
+      if (filtered.length === 0) {
+        listContainer.innerHTML = '<div class="empty-state">कोई प्रोडक्ट नहीं मिला।</div>';
+        return;
+      }
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = `
+          <div class="item-info">
+            <span class="badge ${item.category}">${item.category}</span>
+            <h3>${item.name}</h3>
+            <div style="font-size:0.8rem; color:#6b7280;">अपडेट: ${item.date}</div>
+          </div>
+          <div>
+            <div class="price-tag">₹${parseFloat(item.rate).toFixed(2)}</div>
+            <div class="actions">
+              <button class="btn-small btn-edit" onclick="updateRate(${item.id})">रेट बदलें</button>
+              <button class="btn-small btn-delete" onclick="deleteProduct(${item.id})">हटाएं</button>
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+    // पहली बार लोड होने पर लिस्ट दिखाएं
+    renderList();
+  </script>
+</body>
+</html>
